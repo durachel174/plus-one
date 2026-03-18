@@ -1,6 +1,6 @@
 # Plus One
 
-A curated social dining platform that connects people with an open restaurant seat to guests who share their taste in food and conversation.
+A curated social dining platform where open restaurant seats are shared with people who have the right taste.
 
 **Live:** [plus-one-eosin.vercel.app](https://plus-one-eosin.vercel.app)
 
@@ -8,9 +8,40 @@ A curated social dining platform that connects people with an open restaurant se
 
 ## What it is
 
-Plus One is a small dining club, not a marketplace. When someone makes a reservation and their guest cancels, they post the open seat. AI turns their note into a Dinner Card. The right person finds it, requests the seat, and the host decides who joins.
+Plus One is a small dining club, not a marketplace. When a reservation already exists and a seat opens up, the host shares it. AI turns their note into a Dinner Card. The right person finds it, requests the seat, and the host decides who joins.
 
-The product solves one problem: **how do two strangers feel comfortable having dinner together?** The answer is context — shared taste, intentional framing, and a host who already made a plan.
+> Not a date.
+> Not networking.
+> Just two people who both wanted to be there.
+
+This is different from events, group dinners, or marketplaces — the reservation already exists. The platform fills the seat.
+
+The constraint is not finding guests — it's giving hosts confidence to share the seat. Plus One solves this through context, not volume.
+
+---
+
+## Access model
+
+Membership is based on fit — not activity, not volume.
+
+```
+Anyone        → landing page, feed (read-only), host preview
+Signed up     → request membership (sets flag: pending)
+Pending       → browse feed, see host preview, /pending if accessing protected routes
+Approved      → full access to host a dinner + seat requests
+```
+
+Membership status is a flag on the user profile (`null | pending | approved`). Protected routes check this flag at the middleware level before rendering. Approval is currently manual — reviewed and set via Supabase.
+
+---
+
+## Product insight
+
+The hardest part is not matching people.
+
+It's making the first dinner feel natural.
+
+Plus One doesn't rely on volume or endless browsing. It relies on context — so that when a dinner appears, it already feels right.
 
 ---
 
@@ -34,13 +65,17 @@ Host note (free text)
 Stored in Supabase · Rendered as Dinner Card
 ```
 
-The prompt uses a two-step approach: first fetching a one-line restaurant description, then generating the card with both the host's note and restaurant context — so the output reflects both what the host said and where they're going.
+The system is designed to preserve the host's intent — whether it's a birthday dinner, a long-awaited reservation, or a last-minute cancellation — not just describe the restaurant.
+
+The system prioritizes faithfulness over fluency — preserving the host's intent matters more than producing polished copy.
+
+The card generated in the preview is what gets published — no second AI call.
 
 ### 2. Occasion detection
-A keyword extraction layer runs before the AI call and injects detected occasions (birthday, anniversary, farewell, etc.) directly into the prompt as a hard instruction — ensuring the card reflects the actual context, not just the restaurant's reputation.
+A lightweight extraction step identifies occasions (e.g. birthday, celebration, farewell) and injects them into the prompt to ensure the output reflects the actual context, not just the restaurant's reputation.
 
 ### 3. Compatibility scoring *(v1.5)*
-Planned: semantic scoring between host and guest profiles using extracted dining attributes.
+Planned: semantic scoring between host and guest profiles based on dining preferences (e.g. cuisine style, pacing, social energy).
 
 ### 4. Message moderation *(v1.5)*
 Planned: classification of seat request messages (safe / suspicious / blocked) before delivery to hosts.
@@ -82,14 +117,20 @@ The Anthropic API key never touches the client. All AI calls go through server-s
 ## Core user flows
 
 **Host**
-1. Sign up → complete profile
+1. Sign up → request membership → get approved
 2. Create listing → write note → AI generates Dinner Card → preview → publish
 3. Receive seat requests → review guest + message → accept or decline
 
 **Guest**
-1. Browse feed → view Dinner Card
-2. Request seat → write message
-3. Wait for host decision → receive contact details on acceptance
+1. Sign up → request membership → get approved
+2. Browse feed → view Dinner Card
+3. Request seat → write message
+4. Wait for host decision → receive contact details on acceptance
+
+**Pre-membership**
+1. Land on homepage → browse feed (read-only)
+2. Try host preview → see real AI card generation without account
+3. Request membership → sign up → submit application → pending state
 
 ---
 
@@ -97,10 +138,13 @@ The Anthropic API key never touches the client. All AI calls go through server-s
 
 ```
 app/
-  page.tsx                    # Landing page
-  feed/page.jsx               # Dinner feed
-  host/page.jsx               # Host form + AI card preview
-  dinners/[id]/page.jsx       # Dinner detail + seat request flow
+  page.tsx                    # Landing page (smart membership CTA)
+  feed/page.jsx               # Dinner feed (public, read-only)
+  host/page.jsx               # Host form + AI card preview (approved only)
+  host-preview/page.jsx       # Mock host form — public, no auth required
+  dinners/[id]/page.jsx       # Dinner detail + seat request flow (approved only)
+  membership/page.jsx         # Membership request form
+  pending/page.jsx            # Shown to pending members on protected routes
   login/page.jsx              # Auth (login + signup)
   test/page.jsx               # AI prompt tester (internal)
   api/
@@ -108,15 +152,18 @@ app/
     dinners/route.js          # Create + fetch dinners
     dinners/[id]/route.js     # Single dinner
     requests/route.js         # Seat requests
+    membership/route.js       # Membership applications
 
 components/
-  ui/Nav.jsx                  # Navigation
+  ui/Nav.jsx                  # Navigation (auth-aware, smart logo routing)
   dinner/DinnerCard.jsx       # Reusable card component
 
 lib/
   supabase.js                 # Admin + client Supabase clients
   supabase-server.js          # Server-side auth client
   supabase-client.js          # Browser auth client
+
+middleware.js                 # Route protection + membership status checks
 ```
 
 ---
@@ -124,9 +171,10 @@ lib/
 ## Database schema
 
 ```sql
-profiles       -- extends Supabase auth.users
-dinners        -- restaurant, date, AI-generated card fields, status
-requests       -- dinner_id, guest_id, message, moderation_status
+profiles              -- extends Supabase auth.users, membership_status (null | pending | approved)
+dinners               -- restaurant, date, AI-generated card fields, status
+requests              -- dinner_id, guest_id, message, moderation_status
+membership_requests   -- application responses, user_id, status
 ```
 
 ---
@@ -142,20 +190,24 @@ cp .env.example .env.local
 # Fill in: ANTHROPIC_API_KEY, NEXT_PUBLIC_SUPABASE_URL,
 #          NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
 
-# Run database migrations (Supabase SQL editor)
-# See schema in /docs/schema.sql
-
 # Start dev server
 npm run dev
+```
+
+To approve a member manually:
+```sql
+update public.profiles
+set membership_status = 'approved'
+where id = 'user-uuid';
 ```
 
 ---
 
 ## What's next (v1.5)
 
-- **Alive Dinner Card** — host posts a question, guest answers when requesting
-- **Compatibility scoring** — semantic matching between host and guest profiles
+- **Alive Dinner Card** — a shared pre-dinner context where the host posts a question and the guest responds when requesting, creating alignment before the dinner
+- **Compatibility scoring** — semantic matching between host and guest profiles based on dining preferences
 - **Message moderation** — AI classification before messages reach hosts
+- **Admin view** — simple dashboard to review and approve membership requests
 - **Post-dinner feedback** — unlocks better matching over time
 - **Verified reservations** — confirmation screenshot before listing goes live
-
