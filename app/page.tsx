@@ -1,6 +1,29 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase-client";
 import Link from "next/link";
 
 export default function Home() {
+  const router = useRouter();
+  const supabase = createClient();
+  const [membershipDest, setMembershipDest] = useState("/login");
+
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) { setMembershipDest("/login"); return; }
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("membership_status")
+        .eq("id", user.id)
+        .single();
+      const status = profile?.membership_status;
+      if (status === "approved") setMembershipDest("/feed");
+      else if (status === "pending") setMembershipDest("/pending");
+      else setMembershipDest("/membership");
+    });
+  }, []);
   return (
     <>
       <style>{css}</style>
@@ -23,9 +46,9 @@ export default function Home() {
               A small dining club for people who care about where they're going,
               who they're dining with, and how the night feels.
             </p>
-            <Link href="/membership" className="btn-primary">
+            <button className="btn-primary" onClick={() => router.push(membershipDest)}>
               Request membership
-            </Link>
+            </button>
             <p className="hero-note">
               Membership is free. We review requests to keep dinners feeling right.
             </p>

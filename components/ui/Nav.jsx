@@ -35,8 +35,8 @@ export default function Nav() {
     <>
       <style>{css}</style>
       <nav className="nav">
-        <div className="nav-logo" onClick={() => router.push("/feed")}>
-          Plus One
+        <div className="nav-logo" onClick={() => router.push(user ? "/feed" : "/")}>
+            Plus One
         </div>
 
         <div className="nav-links">
