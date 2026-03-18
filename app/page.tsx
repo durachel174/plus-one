@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
 
 export default function Home() {
@@ -7,7 +6,7 @@ export default function Home() {
       <style>{css}</style>
       <main className="landing">
 
-        {/* Hero */}
+        {/* Hero — membership first */}
         <section className="hero">
           <div className="hero-bg" />
           <div className="hero-grain" />
@@ -21,27 +20,15 @@ export default function Home() {
               A table<br />for <em>one more</em>
             </h1>
             <p className="hero-sub">
-              You made the reservation. Your friend cancelled.<br />
-              Plus One connects you with someone who shares your taste.
+              A small dining club for people who care about where they're going,
+              who they're dining with, and how the night feels.
             </p>
-            <div className="hero-ctas">
-              <Link href="/host" className="btn-solid">Host a dinner</Link>
-              <Link href="/feed" className="btn-outline">Browse this week</Link>
-            </div>
-            <div className="hero-proof">
-              <div className="proof">
-                <div className="proof-n">3</div>
-                <div className="proof-l">Dinners this week</div>
-              </div>
-              <div className="proof">
-                <div className="proof-n">1 day</div>
-                <div className="proof-l">Average to fill</div>
-              </div>
-              <div className="proof">
-                <div className="proof-n">86%</div>
-                <div className="proof-l">Avg. match score</div>
-              </div>
-            </div>
+            <Link href="/membership" className="btn-primary">
+              Request membership
+            </Link>
+            <p className="hero-note">
+              Membership is free. We review requests to keep dinners feeling right.
+            </p>
           </div>
         </section>
 
@@ -51,7 +38,7 @@ export default function Home() {
             {
               n: "I",
               title: "Host posts a seat",
-              desc: "You have a reservation and an empty chair. Write a note — AI turns it into a Dinner Card that shows exactly what kind of night you're planning.",
+              desc: "A reservation already exists and a seat opens up. The host writes a note — AI turns it into a Dinner Card that shows exactly what kind of night they're planning.",
             },
             {
               n: "II",
@@ -72,13 +59,27 @@ export default function Home() {
           ))}
         </section>
 
-        {/* CTA strip */}
-        <section className="cta-strip">
-          <div className="cta-strip-inner">
-            <div className="cta-title">Ready to join a table?</div>
-            <div className="cta-buttons">
-              <Link href="/feed" className="btn-solid">Browse this week's dinners</Link>
-              <Link href="/login" className="btn-outline">Create an account</Link>
+        {/* Not a date. Not networking. */}
+        <section className="manifesto">
+          <div className="manifesto-inner">
+            <p className="manifesto-line">Not a date.</p>
+            <p className="manifesto-line">Not networking.</p>
+            <p className="manifesto-line manifesto-line--gold">
+              Just two people who both wanted to be there.
+            </p>
+          </div>
+        </section>
+
+        {/* Explore — secondary */}
+        <section className="explore">
+          <div className="explore-inner">
+            <div className="explore-label">Want to explore first?</div>
+            <div className="explore-desc">
+              See how dinners are listed and what hosting looks like before you apply.
+            </div>
+            <div className="explore-links">
+              <Link href="/feed" className="btn-ghost">Browse this week's dinners</Link>
+              <Link href="/host-preview" className="btn-ghost">See how hosting works</Link>
             </div>
           </div>
         </section>
@@ -113,7 +114,7 @@ const css = `
   }
   .hero-inner {
     position: relative; z-index: 1;
-    max-width: 720px; text-align: center;
+    max-width: 640px; text-align: center;
     display: flex; flex-direction: column; align-items: center;
   }
   .hero-kicker {
@@ -134,49 +135,29 @@ const css = `
 
   .hero-sub {
     font-size: 15px; font-weight: 300; color: #6A6560;
-    line-height: 1.8; max-width: 420px; margin-bottom: 48px;
+    line-height: 1.8; max-width: 400px; margin-bottom: 48px;
     letter-spacing: 0.02em;
   }
 
-  .hero-ctas { display: flex; gap: 12px; margin-bottom: 72px; }
-
-  .btn-solid {
-    padding: 13px 32px; background: #F0EAE0; color: #080808;
+  .btn-primary {
+    padding: 15px 48px; background: #F0EAE0; color: #080808;
     font-family: 'DM Sans', sans-serif; font-weight: 500;
-    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
     text-decoration: none; transition: background 0.2s; display: inline-block;
+    margin-bottom: 16px;
   }
-  .btn-solid:hover { background: #FAFAF8; }
+  .btn-primary:hover { background: #FAFAF8; }
 
-  .btn-outline {
-    padding: 13px 32px; background: transparent; color: #6A6560;
-    border: 1px solid #2E2E2E;
-    font-family: 'DM Sans', sans-serif; font-weight: 300;
-    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
-    text-decoration: none; transition: all 0.2s; display: inline-block;
+  .hero-note {
+    font-size: 11px; color: #3A3530; letter-spacing: 0.04em; line-height: 1.6;
   }
-  .btn-outline:hover { color: #F0EAE0; border-color: #6A6560; }
-
-  .hero-proof {
-    display: flex; gap: 64px;
-    padding-top: 40px; border-top: 1px solid #232323;
-    width: 100%;  justify-content: center;
-  }
-  .proof { text-align: center; }
-  .proof-n {
-    font-family: 'Cormorant Garamond', serif; font-size: 36px;
-    font-weight: 300; color: #F0EAE0; letter-spacing: -0.02em;
-  }
-  .proof-l { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #6A6560; margin-top: 6px; }
 
   /* ── HOW ── */
   .how {
     display: grid; grid-template-columns: 1fr 1fr 1fr;
     border-top: 1px solid #232323;
   }
-  .how-cell {
-    padding: 56px 48px; border-right: 1px solid #232323;
-  }
+  .how-cell { padding: 56px 48px; border-right: 1px solid #232323; }
   .how-cell:last-child { border-right: none; }
   .how-n {
     font-family: 'Cormorant Garamond', serif; font-size: 11px;
@@ -189,16 +170,43 @@ const css = `
   }
   .how-desc { font-size: 13px; color: #6A6560; line-height: 1.75; font-weight: 300; }
 
-  /* ── CTA STRIP ── */
-  .cta-strip {
+  /* ── MANIFESTO ── */
+  .manifesto {
     border-top: 1px solid #232323;
-    padding: 80px 40px;
+    padding: 100px 40px;
     display: flex; justify-content: center;
   }
-  .cta-strip-inner { text-align: center; }
-  .cta-title {
-    font-family: 'Cormorant Garamond', serif; font-size: 36px;
-    font-weight: 300; color: #F0EAE0; margin-bottom: 32px;
+  .manifesto-inner { text-align: center; }
+  .manifesto-line {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 300; color: #3A3530;
+    line-height: 1.3; letter-spacing: -0.01em;
   }
-  .cta-buttons { display: flex; gap: 12px; justify-content: center; }
+  .manifesto-line--gold { color: #C9A96E; font-style: italic; }
+
+  /* ── EXPLORE ── */
+  .explore {
+    border-top: 1px solid #1A1A1A;
+    padding: 64px 40px;
+    display: flex; justify-content: center;
+  }
+  .explore-inner { text-align: center; max-width: 480px; }
+  .explore-label {
+    font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: #3A3530; margin-bottom: 12px;
+  }
+  .explore-desc {
+    font-size: 13px; color: #3A3530; line-height: 1.7;
+    margin-bottom: 24px; font-weight: 300;
+  }
+  .explore-links { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn-ghost {
+    padding: 10px 24px; background: transparent; color: #3A3530;
+    border: 1px solid #1A1A1A;
+    font-family: 'DM Sans', sans-serif; font-weight: 300;
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    text-decoration: none; transition: all 0.2s; display: inline-block;
+  }
+  .btn-ghost:hover { color: #6A6560; border-color: #232323; }
 `;
