@@ -159,14 +159,3 @@ npm run dev
 - **Post-dinner feedback** — unlocks better matching over time
 - **Verified reservations** — confirmation screenshot before listing goes live
 
----
-
-## Resume bullets
-
-> Built LLM-powered listing enhancement that converts free-text host notes into structured Dinner Cards (title, summary, match tags, dining style, social energy)
->
-> Designed occasion detection layer that extracts keywords from host input and injects them as hard prompt instructions — ensuring AI output reflects actual context
->
-> Architected server-side AI pipeline where Anthropic API calls never touch the client — structured JSON outputs stored as typed DB fields and drive product logic
->
-> Built full-stack social dining MVP: Next.js 14, Supabase (Postgres + Auth), Anthropic Claude API, deployed on Vercel
