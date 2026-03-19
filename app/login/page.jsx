@@ -8,9 +8,10 @@ export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  const [mode, setMode] = useState("login"); // "login" | "signup"
+  const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -22,13 +23,30 @@ export default function LoginPage() {
 
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
+        // Use server route so admin client can write full_name to profiles reliably
+        const res = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, full_name: name }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Signup failed");
         setSuccess("Check your email to confirm your account.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        router.push("/feed");
+
+        const { data: { user } } = await supabase.auth.getUser();
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("membership_status")
+          .eq("id", user.id)
+          .single();
+
+        const status = profile?.membership_status;
+        if (status === "approved") router.push("/feed");
+        else if (status === "pending") router.push("/pending");
+        else router.push("/membership");
         router.refresh();
       }
     } catch (e) {
@@ -41,6 +59,8 @@ export default function LoginPage() {
   const handleKeyDown = (e) => {
     if (e.key === "Enter") handleSubmit();
   };
+
+  const canSubmit = email && password && (mode === "login" || name.trim());
 
   return (
     <>
@@ -56,6 +76,22 @@ export default function LoginPage() {
               ? "Sign in to browse and host dinners."
               : "Create an account to get started."}
           </p>
+
+          {mode === "signup" && (
+            <div className="field">
+              <label className="label">Your name</label>
+              <input
+                className="input"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="First and last"
+                autoComplete="name"
+                autoFocus
+              />
+            </div>
+          )}
 
           <div className="field">
             <label className="label">Email</label>
@@ -89,13 +125,9 @@ export default function LoginPage() {
           <button
             className="btn-submit"
             onClick={handleSubmit}
-            disabled={loading || !email || !password}
+            disabled={loading || !canSubmit}
           >
-            {loading
-              ? "..."
-              : mode === "login"
-              ? "Sign in"
-              : "Create account"}
+            {loading ? "..." : mode === "login" ? "Sign in" : "Create account"}
           </button>
 
           <div className="login-switch">
@@ -128,11 +160,9 @@ const css = `
   body { background: #080808; color: #F0EAE0; font-family: 'DM Sans', sans-serif; font-weight: 300; }
 
   .login-page { min-height: 100vh; display: grid; place-items: center; padding: 40px; }
-
   .login-box { width: 100%; max-width: 400px; }
 
   .login-logo { font-family: 'Cormorant Garamond', serif; font-size: 18px; letter-spacing: 0.12em; text-transform: uppercase; color: #F0EAE0; margin-bottom: 48px; }
-
   .login-title { font-family: 'Cormorant Garamond', serif; font-size: 36px; font-weight: 300; color: #F0EAE0; margin-bottom: 8px; }
   .login-sub { font-size: 13px; color: #6A6560; line-height: 1.6; margin-bottom: 36px; }
 

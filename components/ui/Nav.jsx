@@ -9,16 +9,31 @@ export default function Nav() {
   const pathname = usePathname();
   const supabase = createClient();
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+      if (user) fetchProfile(user.id);
+    });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) fetchProfile(session.user.id);
+      else setProfile(null);
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const fetchProfile = async (userId) => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("full_name, membership_status")
+      .eq("id", userId)
+      .maybeSingle();
+    setProfile(data);
+  };
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -28,36 +43,48 @@ export default function Nav() {
 
   const isActive = (path) => pathname === path || pathname.startsWith(path + "/");
 
-  // Don't show nav on login page
   if (pathname === "/login") return null;
+
+  const isApproved = profile?.membership_status === "approved";
+  const displayName = profile?.full_name || user?.email;
 
   return (
     <>
       <style>{css}</style>
       <nav className="nav">
         <div className="nav-logo" onClick={() => router.push(user ? "/feed" : "/")}>
-            Plus One
+          Plus One
         </div>
 
         <div className="nav-links">
-          <button
-            className={`nav-link ${isActive("/feed") ? "active" : ""}`}
-            onClick={() => router.push("/feed")}
-          >
-            This week
-          </button>
-          <button
-            className={`nav-link ${isActive("/host") ? "active" : ""}`}
-            onClick={() => router.push("/host")}
-          >
-            Host a dinner
-          </button>
+          {isApproved && (
+            <>
+              <button
+                className={`nav-link ${isActive("/feed") ? "active" : ""}`}
+                onClick={() => router.push("/feed")}
+              >
+                This week
+              </button>
+              <button
+                className={`nav-link ${isActive("/host") && !isActive("/host/dinners") ? "active" : ""}`}
+                onClick={() => router.push("/host")}
+              >
+                Host a dinner
+              </button>
+              <button
+                className={`nav-link ${isActive("/host/dinners") ? "active" : ""}`}
+                onClick={() => router.push("/host/dinners")}
+              >
+                My dinners
+              </button>
+            </>
+          )}
         </div>
 
         <div className="nav-right">
           {user ? (
             <>
-              <span className="nav-email">{user.email}</span>
+              <span className="nav-name">{displayName}</span>
               <button className="nav-signout" onClick={signOut}>
                 Sign out
               </button>
@@ -105,7 +132,7 @@ const css = `
 
   .nav-right { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
 
-  .nav-email {
+  .nav-name {
     font-size: 11px; color: #3A3530; letter-spacing: 0.03em;
     max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }

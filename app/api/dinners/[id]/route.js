@@ -5,11 +5,13 @@ export async function GET(request, context) {
 
   const { data, error } = await supabaseAdmin
     .from("dinners")
-    .select("*")
+    .select("*, profiles:host_id (full_name)")
     .eq("id", id)
     .single();
 
   if (error) return Response.json({ error: error.message }, { status: 404 });
 
-  return Response.json({ dinner: data });
+  const dinner = { ...data, host_name: data.profiles?.full_name ?? null };
+
+  return Response.json({ dinner });
 }

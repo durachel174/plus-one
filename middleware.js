@@ -48,24 +48,27 @@ export async function middleware(request) {
   }
 
   if (needsMember && user) {
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('id, membership_status')
-      .eq('id', user.id)
-      .maybeSingle()
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, membership_status')
+        .eq('id', user.id)
+        .maybeSingle()
 
-    console.log('middleware user.id:', user.id)
-    console.log('middleware profile:', profile)
-    console.log('middleware profile error:', error)
+    const status = profile?.membership_status
 
-    if (!profile || profile.membership_status !== 'approved') {
-      return NextResponse.redirect(new URL('/pending', request.url))
+    if (status === 'approved') {
+        // let them through
+    } else if (status === 'pending') {
+        return NextResponse.redirect(new URL('/pending', request.url))
+    } else {
+        // null or anything else — they haven't applied yet
+        return NextResponse.redirect(new URL('/membership', request.url))
     }
-  }
+    }
 
   return response
 }
 
 export const config = {
-  matcher: ['/membership', '/host', '/dinners/:path*'],
+  matcher: ['/membership', '/host', '/dinners/:path*', '/host/dinners/:path*'],
 }
