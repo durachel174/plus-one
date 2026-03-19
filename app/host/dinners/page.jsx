@@ -52,8 +52,8 @@ export default function MyDinnersPage() {
                         <div className="dinner-row-meta">{d.date_text}</div>
                       </div>
                       <div className="dinner-row-right">
-                        {d.host_name && (
-                          <div className="other-person">with {d.host_name}</div>
+                        {d.other_name && (
+                          <div className="other-person">with {d.other_name}</div>
                         )}
                         <div className="status-tag status-accepted">Accepted</div>
                       </div>
