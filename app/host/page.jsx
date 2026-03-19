@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import DinnerCard from "@/components/dinner/DinnerCard";
+import AliveQuestion from "@/components/dinner/AliveQuestion";
+
+
 
 export default function HostPage() {
   const router = useRouter();
@@ -14,7 +17,8 @@ export default function HostPage() {
     price_range: "$$$",
     seats_open: 1,
     host_note_raw: "",
-  });
+    host_question: "",
+    });
 
   const [cardPreview, setCardPreview] = useState(null);
   const [cardLoading, setCardLoading] = useState(false);
@@ -200,6 +204,12 @@ export default function HostPage() {
             excited about this one.
           </div>
 
+          {/* Alive question */}
+            <AliveQuestion
+            value={fields.host_question}
+            onChange={(v) => set("host_question", v)}
+            />
+
           {error && <div className="error">{error}</div>}
 
           <button
@@ -305,6 +315,10 @@ const css = `
   .btn-submit { width: 100%; padding: 13px; background: #F0EAE0; color: #080808; border: none; font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; }
   .btn-submit:hover:not(:disabled) { background: #FAFAF8; }
   .btn-submit:disabled { background: #1A1A1A; color: #3A3530; cursor: default; }
+
+  /* Alive question */
+    .alive-field .input { border-left: 2px solid #2A3D2E; }
+    .alive-field .input:focus { border-left-color: #6B8F72; }
 
   /* Preview */
   .preview-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #3A3530; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }

@@ -82,6 +82,7 @@ export async function POST(request) {
       dining_style: cardData?.dining_style ?? null,
       social_energy: cardData?.social_energy ?? null,
       status,
+      host_question: body.host_question || null,
     })
     .select()
     .single();

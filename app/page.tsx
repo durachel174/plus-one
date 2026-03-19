@@ -44,10 +44,10 @@ export default function Home() {
         .select("membership_status")
         .eq("id", user.id)
         .single();
-      const status = profile?.membership_status;
-      if (status === "approved") setMembershipDest("/feed");
-      else if (status === "pending") setMembershipDest("/pending");
-      else setMembershipDest("/membership");
+      const status = profile?.membership_status ?? null;
+if (status === "approved") setMembershipDest("/feed");
+else if (status === "pending") setMembershipDest("/pending");
+else setMembershipDest("/membership");
     });
   }, []);
 

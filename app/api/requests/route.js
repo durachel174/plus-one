@@ -2,7 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase-server";
 
 export async function POST(request) {
-    const supabase = await createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -11,7 +11,7 @@ export async function POST(request) {
   const body = await request.json().catch(() => null);
   if (!body) return Response.json({ error: "Invalid request body" }, { status: 400 });
 
-  const { dinner_id, message } = body;
+  const { dinner_id, message, guest_answer } = body;
 
   if (!dinner_id || !message) {
     return Response.json({ error: "dinner_id and message are required" }, { status: 400 });
@@ -39,6 +39,7 @@ export async function POST(request) {
       dinner_id,
       guest_id: user.id,
       message,
+      guest_answer: guest_answer || null,
       moderation_status: "pending",
       status: "pending",
     })

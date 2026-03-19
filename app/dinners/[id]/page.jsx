@@ -12,6 +12,7 @@ export default function DinnerPage() {
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState(0); // 0: review, 1: message, 2: confirmed
   const [message, setMessage] = useState("");
+  const [answer, setAnswer] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -34,7 +35,11 @@ export default function DinnerPage() {
       const res = await fetch("/api/requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dinner_id: id, message }),
+        body: JSON.stringify({
+          dinner_id: id,
+          message,
+          guest_answer: answer.trim() || null,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong");
@@ -109,17 +114,35 @@ export default function DinnerPage() {
         {/* Step 1 — Message */}
         {step === 1 && (
           <div className="step-content">
-            <div className="step-title">Why do you want to join?</div>
+            <div className="step-title">Before you join</div>
             <p className="step-sub">
-              This message goes to the host. Be specific — mention what draws
+              Your message goes to the host. Be specific — mention what draws
               you to this particular dinner.
             </p>
+
+            {/* Host question — only shown if one exists */}
+            {dinner.host_question && (
+              <div className="host-question-block">
+                <div className="hq-label">From the host</div>
+                <div className="hq-text">{dinner.host_question}</div>
+                <textarea
+                  className="textarea hq-textarea"
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  placeholder="Your answer"
+                  rows={2}
+                />
+              </div>
+            )}
+
+            <div className="message-label">Why do you want to join?</div>
             <textarea
               className="textarea"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder={`e.g. I've been wanting to try ${dinner.restaurant} for a while — I love the kind of dinner where the food is the whole point and conversation comes naturally.`}
             />
+
             {error && <div className="req-error">{error}</div>}
             <div className="act-row">
               <button className="btn-back-sm" onClick={() => setStep(0)}>
@@ -181,9 +204,7 @@ const css = `
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #080808; color: #F0EAE0; font-family: 'DM Sans', sans-serif; font-weight: 300; }
 
-  :root {
-    --gold-dim: #8A6E44;
-  }
+  :root { --gold-dim: #8A6E44; }
 
   .detail-page { max-width: 600px; margin: 0 auto; padding: 56px 40px 80px; }
 
@@ -206,6 +227,44 @@ const css = `
 
   .step-title { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 300; color: #F0EAE0; margin-bottom: 8px; }
   .step-sub { font-size: 13px; color: #6A6560; line-height: 1.7; margin-bottom: 28px; font-weight: 300; }
+
+  /* Host question block */
+  .host-question-block {
+    border: 1px solid #232323;
+    border-left: 2px solid #2A3D2E;
+    padding: 16px;
+    margin-bottom: 20px;
+    background: #0A0A0A;
+  }
+  .hq-label {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #6B8F72;
+    margin-bottom: 8px;
+  }
+  .hq-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 300;
+    font-style: italic;
+    color: #F0EAE0;
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+  .hq-textarea {
+    border-left: none !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Message label */
+  .message-label {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #6A6560;
+    margin-bottom: 7px;
+  }
 
   /* Textarea */
   .textarea { width: 100%; background: #0E0E0E; border: 1px solid #232323; color: #F0EAE0; font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: 14px; padding: 13px 16px; outline: none; resize: vertical; min-height: 120px; line-height: 1.65; transition: border-color 0.2s; margin-bottom: 8px; }
